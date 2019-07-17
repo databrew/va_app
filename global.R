@@ -1,0 +1,20 @@
+# Load libraries
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(ggplot2)
+library(ggthemes)
+library(shinyjs)
+library(shinyWidgets)
+library(shinythemes)
+library(markdown)
+library(dplyr)
+library(shinyjqui)
+library(bsplus)
+library(htmltools)
+library(shinyBS)
+library(aTSA)
+library(MASS)
+
+# set options to take away scientific notation in graphs
+options(scipen=999)
