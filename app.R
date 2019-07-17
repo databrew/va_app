@@ -24,6 +24,11 @@ body <- dashboardBody(
             tabName="coders",
             fluidPage(
                 fluidRow(
+                    column(4,
+                           selectInput('doctor_name',
+                                       'Select user', 
+                                       choices = unique(coders$physician_name),
+                                       selected = unique(coders$physician_name[1])))
                   
                 )
             )
