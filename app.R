@@ -28,7 +28,13 @@ body <- dashboardBody(
                            selectInput('doctor_name',
                                        'Select user', 
                                        choices = unique(coders$physician_name),
-                                       selected = unique(coders$physician_name[1])))
+                                       selected = unique(coders$physician_name[1]))),
+                    column(4,
+                           renderLeaflet('map')),
+                    column(4,
+                           selectInput('death_cert',
+                                       'Select Death certificate info',
+                                       choices = unique(coders$)))# HERE
                   
                 )
             )
