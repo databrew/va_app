@@ -34,7 +34,7 @@ body <- dashboardBody(
                     column(4,
                            selectInput('death_cert',
                                        'Select Death certificate info',
-                                       choices = unique(coders$)))# HERE
+                                       choices = unique(coders$info_death_certificat)))# HERE
                   
                 )
             )
