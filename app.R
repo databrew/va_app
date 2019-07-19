@@ -92,6 +92,40 @@ body <- dashboardBody(
       fluidPage(
         fluidRow(
           box( width = 12, 
+               title = 'Comments (Physician 1 and Physician 2)', 
+               status  = 'danger', 
+               solidHeader = T,
+               column(4,
+                      textOutput('comments_coder_1')),
+               column(4,
+                      textOutput('comments_coder_2')))
+          
+        ),
+        fluidRow(
+          box(width = 12,
+              title = 'Cause of death (Physician 1 and Physician 2)',
+              status = 'danger',
+              solidHeader = T,
+              column(2,
+                     selectInput('causa_directa_physcian_1_2',
+                                 'Causa Directa', 
+                                 choices = unique(coders$icd_directa),
+                                 selected = unique(coders$icd_directa)[2])),
+              column(2,
+                     
+                     selectInput('causa_intermedia_physcian_1_2',
+                                 'Causa Intermedia', 
+                                 choices = unique(coders$icd_intermedia),
+                                 selected = unique(coders$icd_intermedia)[5])),
+              column(2,
+                     selectInput('causa_subjacente_physcian_1_2',
+                                 'Causa Subjacente', 
+                                 choices = unique(coders$icd_subjacente),
+                                 selected = unique(coders$icd_subjacente)[3])))
+        ),
+        #### end of new stuff
+        fluidRow(
+          box( width = 12, 
                title = '', 
                status  = 'primary', 
                solidHeader = T,
@@ -136,22 +170,23 @@ body <- dashboardBody(
                      DT::dataTableOutput('demo_table_2')),
               
               column(2,
-                     selectInput('causa_directa',
+                     selectInput('causa_directa_reviewer',
                                  'Causa Directa', 
                                  choices = unique(coders$icd_directa),
                                  selected = unique(coders$icd_directa)[2])),
               column(2,
                      
-                     selectInput('causa_intermedia_2',
+                     selectInput('causa_intermedia_reviewer',
                                  'Causa Intermedia', 
                                  choices = unique(coders$icd_intermedia),
                                  selected = unique(coders$icd_intermedia)[5])),
               column(2,
-                     selectInput('causa_subjacente_2',
+                     selectInput('causa_subjacente_reviewer',
                                  'Causa Subjacente', 
                                  choices = unique(coders$icd_subjacente),
                                  selected = unique(coders$icd_subjacente)[3])))
         )
+
       )
     )
   )
@@ -202,24 +237,6 @@ server <- function(input, output) {
     
   })
   
-  # create a table output that shows the demographic details of deceased
-  output$demo_table <- DT::renderDataTable({
-    # get doc data from reactive object
-    x <- doc_data()
-    
-    # keep only name, id, gender, dob, dod, aod, and season
-    x <- x[, c('Name', 'Gender','ID', 'Date of birth', 'Date of death', 'Place of death', 'Age of death', 'Season of death')]
-    
-    # make data long
-    x <- as.data.frame(t(x))
-    
-    # replace colnames with blank
-    names(x) <- ''
-    
-    datatable(x, rownames = TRUE, colnames = '')
-    
-    
-  })
   
   # create a table output that shows the demographic details of deceased
   output$death_cert_table <- DT::renderDataTable({
@@ -283,6 +300,169 @@ server <- function(input, output) {
   output$map <- renderLeaflet({
     # get doc data from reactive object
     x <- doc_data()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c('Name', 'Gender','ID', 'Date of birth', 'Date of death', 'Place of death', 'Age of death', 'Season of death', 'Lat', 'Lon')]
+    
+    leaflet(data = x) %>% addTiles() %>%
+      setView(x$Lat, x$Lon, zoom = 04) %>%
+      addMarkers(~Lat, ~Lon, popup = ~as.character(Name), label = ~as.character(Name))
+    
+  })
+  
+  
+  
+  ###################################
+  # Beginning of reviewer tab
+  
+  # create a uioutput for death cert details
+  doc_data_2 <- reactive({
+    
+    # get doctor name
+    doc_name_2 <- input$doctor_name_2
+    
+    # subet data
+    x <- coders[coders$physician_name_2 == doc_name_2,]
+    
+    # change names of x
+    names(x) <- c('Physician name','Reviewing physician', 'Name', 'Gender', 'ID', 'Date of birth', 'Date of death', 'Place of death',
+                  'Lat', 'Lon', 'Age of death', 'Season of death', 'Symptoms', 'Description',
+                  'Causa imediata', 'Primeira causa', 'Comments', 'Causa directa', 'Causa intermedia', 'Cause subjacente')
+    
+    # duplicate rows, remove one
+    x <- x[!duplicated(x$Name),]
+    
+    return(x)
+    
+  })
+  
+  # create reaactive object that will get comments from the previous two doctrs
+  doc_data_reviewers <- reactive({
+    
+    # get doctor name
+    doc_name_2 <- input$doctor_name_2
+    
+    # subet data
+    x <- coders[coders$physician_name_2 == doc_name_2,]
+    
+    # change names of x
+    names(x) <- c('Physician name','Reviewing physician', 'Name', 'Gender', 'ID', 'Date of birth', 'Date of death', 'Place of death',
+                  'Lat', 'Lon', 'Age of death', 'Season of death', 'Symptoms', 'Description',
+                  'Causa imediata', 'Primeira causa', 'Comments', 'Causa directa', 'Causa intermedia', 'Cause subjacente')
+    
+    
+    return(x)
+    
+  })
+  
+  # create a table output that shows the demographic details of deceased
+  output$comments_coder_1 <- renderText({
+    # get doc data from reactive object
+    x <- doc_data_reviewers()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- as.character(x[, c( 'Comments')])[1]
+    
+    paste0(as.character(x))
+    
+  })
+  
+  # create a table output that shows the demographic details of deceased
+  output$comments_coder_2 <- renderText({
+    # get doc data from reactive object
+    x <- doc_data_reviewers()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- as.character(x[, c( 'Comments')])[2]
+    
+    paste0(as.character(x))
+    
+  })
+  
+  
+  # create a table output that shows the demographic details of deceased
+  output$demo_table_2 <- DT::renderDataTable({
+    # get doc data from reactive object
+    x <- doc_data_2()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c('Name', 'Gender','ID', 'Date of birth', 'Date of death', 'Place of death', 'Age of death', 'Season of death')]
+    
+    # make data long
+    x <- as.data.frame(t(x))
+    
+    # replace colnames with blank
+    names(x) <- ''
+    
+    datatable(x, rownames = TRUE, colnames = '')
+    
+    
+  })
+  
+  
+  
+  # create a table output that shows the demographic details of deceased
+  output$death_cert_table_2 <- DT::renderDataTable({
+    # get doc data from reactive object
+    x <- doc_data_2()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c( 'Causa imediata', 'Primeira causa')]
+    
+    # make data long
+    x <- as.data.frame(t(x))
+    
+    # replace colnames with blank
+    names(x) <- ''
+    
+    datatable(x, rownames = TRUE, colnames = '')
+    
+    
+  })
+  
+  # create a table output that shows the demographic details of deceased
+  output$narrative_2 <-renderText({
+    # get doc data from reactive object
+    x <- doc_data_2()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c( 'Description')]
+    
+    paste0(as.character(x))
+    
+  })
+  
+  
+  # create a table output that shows the demographic details of deceased
+  output$comments_2 <- renderText({
+    # get doc data from reactive object
+    x <- doc_data_2()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c( 'Comments')]
+    
+    paste0(as.character(x))
+    
+  })
+  
+  
+  # create a table output that shows the demographic details of deceased
+  output$symptoms_2 <- renderText({
+    # get doc data from reactive object
+    x <- doc_data_2()
+    
+    # keep only name, id, gender, dob, dod, aod, and season
+    x <- x[, c( 'Symptoms')]
+    
+    paste0(as.character(x))
+    
+  })
+  
+  
+  # create a map output for leaflet
+  output$map_2 <- renderLeaflet({
+    # get doc data from reactive object
+    x <- doc_data_2()
     
     # keep only name, id, gender, dob, dod, aod, and season
     x <- x[, c('Name', 'Gender','ID', 'Date of birth', 'Date of death', 'Place of death', 'Age of death', 'Season of death', 'Lat', 'Lon')]
