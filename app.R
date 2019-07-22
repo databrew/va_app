@@ -12,7 +12,9 @@ sidebar <- dashboardSidebar(
       text = 'Reviewers',
       tabName = 'reviewers',
       icon = icon("cog", lib = "glyphicon"))
-  )
+  ),
+  actionButton("submit", "Submit", style = "color: #fff;background-color: #337ab7; border-color: #2e6da4", width="70%")
+  
 )
 
 body <- dashboardBody(
@@ -91,14 +93,21 @@ body <- dashboardBody(
       tabName = 'reviewers',
       fluidPage(
         fluidRow(
-          box( width = 12, 
-               title = 'Comments (Physician 1 and Physician 2)', 
+          h1("Comments from physcician 1 & 2"),
+          box( width = 6,
+               title = 'Physician 1', 
                status  = 'danger', 
                solidHeader = T,
                column(4,
-                      textOutput('comments_coder_1')),
+                      textOutput('comments_coder_1'))
+               ),
+          box( width = 6,
+               title = 'Physician 2', 
+               status  = 'danger', 
+               solidHeader = T,
                column(4,
-                      textOutput('comments_coder_2')))
+                      textOutput('comments_coder_2'))
+               )
           
         ),
         fluidRow(
@@ -163,7 +172,7 @@ body <- dashboardBody(
         ),
         fluidRow(
           box(width = 12,
-              title = 'Demographics & Cause of death',
+              title = 'Demographics & Cause of death (as specified by reviewer)',
               status = 'primary',
               solidHeader = T,
               column(4,
